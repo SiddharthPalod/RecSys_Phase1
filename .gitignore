@@ -76,7 +76,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
-.ipynb_checkpoints
+.ipynb_checkpoints/
 
 # IPython
 profile_default/
@@ -161,18 +161,47 @@ cython_debug/
 *.DS_Store
 test.ipynb
 dev.ipynb
-dataset/NSR-1K/counting/*counting.mscoco*
-dataset/NSR-1K/counting/*counting.single*
-dataset/NSR-1K/counting/*counting.two*
-dataset/NSR-1K/counting/*counting.reasoning*
-ATISS/data_output
-ATISS/data_output_future
-ATISS/3D-FUTURE
-ATISS/*.zip
-src/
-*.pth
-gligen/generation_samples
-eval_models/GLIP/outputs
-assets/*.pdf
-assets/*.pptx
-assets/blender
+
+# -----------------------------------------------------------------------------
+# Nested project: all code lives under LayoutGPT/ (paths are repo-root-relative).
+# Trailing "/" = ignore only directories (Git convention).
+# -----------------------------------------------------------------------------
+LayoutGPT/**/__pycache__/
+LayoutGPT/**/.pytest_cache/
+LayoutGPT/**/.mypy_cache/
+LayoutGPT/**/.ruff_cache/
+LayoutGPT/**/htmlcov/
+
+# Dataset blobs (keep small JSON splits; ignore heavy COCO-derived files)
+LayoutGPT/dataset/NSR-1K/counting/*counting.mscoco*
+LayoutGPT/dataset/NSR-1K/counting/*counting.single*
+LayoutGPT/dataset/NSR-1K/counting/*counting.two*
+LayoutGPT/dataset/NSR-1K/counting/*counting.reasoning*
+
+# ATISS / 3D assets (large)
+LayoutGPT/ATISS/data_output/
+LayoutGPT/ATISS/data_output_future/
+LayoutGPT/ATISS/3D-FUTURE/
+LayoutGPT/ATISS/*.zip
+
+# GLIGEN / LLM outputs
+LayoutGPT/gligen/generation_samples/
+LayoutGPT/gligen/gligen_checkpoints/
+LayoutGPT/**/llm_output/
+
+# GLIP eval outputs
+LayoutGPT/eval_models/GLIP/outputs/
+
+# Binary weights (any depth under project)
+LayoutGPT/**/*.pth
+LayoutGPT/**/*.ckpt
+LayoutGPT/**/*.bin
+LayoutGPT/**/*.safetensors
+
+# Local-only trees (scoped to project; avoids ignoring random "src/" elsewhere)
+LayoutGPT/src/
+
+# Assets you do not want in git
+LayoutGPT/assets/*.pdf
+LayoutGPT/assets/*.pptx
+LayoutGPT/assets/blender/
