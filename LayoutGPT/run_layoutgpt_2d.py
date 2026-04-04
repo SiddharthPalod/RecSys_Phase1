@@ -310,9 +310,9 @@ def gpt_generation(prompt_for_gpt, f_gpt_create, args, **kwargs):
                 prompt_str += msg['role'].upper() + ":\n" + msg['content'] + "\n"
 
     if args.llm_type == 'gpt4':
-        model_name = 'gemini-3-flash'
+        model_name = 'gemini-3-flash-preview'
     else:
-        model_name = 'gemini-3-flash'
+        model_name = 'gemini-3-flash-preview'
         
     model = genai.GenerativeModel(model_name, system_instruction=system_prompt)
 

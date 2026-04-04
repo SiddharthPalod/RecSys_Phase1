@@ -25,8 +25,16 @@ tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 parser = argparse.ArgumentParser(prog='LayoutGPT for scene synthesis', description='Use GPTs to predict 3D layout for indoor scenes.')
 parser.add_argument('--room', type=str, default='bedroom', choices=['bedroom','livingroom'])
-parser.add_argument('--dataset_dir', type=str)
-parser.add_argument('--gpt_type', type=str, default='gpt4', choices=['gpt3.5', 'gpt3.5-chat', 'gpt4', 'ollama'])
+parser.add_argument(
+    '--dataset_dir',
+    type=str,
+    default='./ATISS/data_output',
+    help='Directory containing per-room folders (e.g. bedroom/) with dataset_stats.txt and scene npz; '
+         'see README Data Preparation (preprocessed ATISS zip).',
+)
+parser.add_argument('--gpt_type', '--llm_type', type=str, default='gpt4', dest='gpt_type',
+                    choices=['gpt3.5', 'gpt3.5-chat', 'gpt4', 'ollama'],
+                    help='LLM backend')
 parser.add_argument('--ollama_model', type=str, default='llama3.2:1b')
 parser.add_argument('--icl_type', type=str, default='k-similar', choices=['fixed-random', 'k-similar'])
 parser.add_argument('--base_output_dir', type=str, default='./llm_output/3D/')
@@ -254,11 +262,21 @@ def form_prompt_for_chatgpt(text_input, top_k, stats, supporting_examples,
 
 
 def _main(args):
-    dataset_prefix = f"{args.dataset_dir}/{args.room}"
+    dataset_prefix = op.normpath(op.join(args.dataset_dir, args.room))
+    stats_path = op.join(dataset_prefix, "dataset_stats.txt")
+    if not op.isfile(stats_path):
+        raise SystemExit(
+            f"3D dataset not found: {stats_path}\n"
+            "Unzip the preprocessed ATISS data under ./ATISS/ so you have e.g. "
+            "./ATISS/data_output/bedroom/dataset_stats.txt, or pass "
+            "--dataset_dir /path/to/data_output (parent of the bedroom/ or livingroom/ folder).\n"
+            "See README.md: Data Preparation, 3D scene layouts."
+        )
+
     with open(f"dataset/3D/{args.room}_splits.json", "r") as file:
         splits = json.load(file)
         
-    with open(f"{dataset_prefix}/dataset_stats.txt", "r") as file:
+    with open(stats_path, "r") as file:
         stats = json.load(file)
 
     if args.regular_floor_plan:
@@ -358,9 +376,9 @@ def _main(args):
 
             try:
                 if args.gpt_type == 'gpt4':
-                    model_name = 'gemini-3-flash'
+                    model_name = 'gemini-3-flash-preview'
                 else:
-                    model_name = 'gemini-3-flash'
+                    model_name = 'gemini-3-flash-preview'
                 
                 model = genai.GenerativeModel(model_name)
                 
