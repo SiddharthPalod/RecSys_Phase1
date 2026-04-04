@@ -1,0 +1,144 @@
+[
+    {
+        "iter": 0,
+        "object_list": [
+            [
+                ".bed",
+                [
+                    0.05859375,
+                    0.0,
+                    1.0,
+                    0.0625
+                ]
+            ],
+            [
+                ".cupboard",
+                [
+                    0.09375,
+                    0.03125,
+                    1.0,
+                    0.1015625
+                ]
+            ],
+            [
+                ".chair",
+                [
+                    -0.15625,
+                    0.09765625,
+                    0.46875,
+                    0.20703125
+                ]
+            ]
+        ],
+        "prompt": "A rectangular room interior seen from above (bird's-eye layout), 256x256 pixel canvas. Place exactly four movable objects with non-overlapping boxes: bed, cupboard, chair, and table. The bed should anchor one side of the room (wall zone), aligned neatly with margins. The cupboard should sit along a wall with clearance so doors could open (keep it away from bed corners). The chair and table form a seating group: position the chair next to the table (small gap 2\u20138px, chair faces the table, same general cluster in adjacent quadrants). Keep walkspace in the center, balance visual weight (no clutter in one corner only), and prefer symmetric negative space for an aesthetically pleasing layout. Output only CSS boxes for these four labels: bed, cupboard, chair, table.",
+        "query_id": "room_demo_rect_01"
+    },
+    {
+        "iter": 1,
+        "object_list": [],
+        "prompt": "A rectangular room interior seen from above (bird's-eye layout), 256x256 pixel canvas. Place exactly four movable objects with non-overlapping boxes: bed, cupboard, chair, and table. The bed should anchor one side of the room (wall zone), aligned neatly with margins. The cupboard should sit along a wall with clearance so doors could open (keep it away from bed corners). The chair and table form a seating group: position the chair next to the table (small gap 2\u20138px, chair faces the table, same general cluster in adjacent quadrants). Keep walkspace in the center, balance visual weight (no clutter in one corner only), and prefer symmetric negative space for an aesthetically pleasing layout. Output only CSS boxes for these four labels: bed, cupboard, chair, table.",
+        "query_id": "room_demo_rect_01"
+    },
+    {
+        "iter": 2,
+        "object_list": [
+            [
+                ".bed",
+                [
+                    0.0,
+                    0.0390625,
+                    1.0,
+                    0.7890625
+                ]
+            ],
+            [
+                ".cupboard",
+                [
+                    0.0625,
+                    0.0859375,
+                    1.0,
+                    0.9296875
+                ]
+            ],
+            [
+                ".chair",
+                [
+                    0.1875,
+                    0.171875,
+                    0.65625,
+                    0.890625
+                ]
+            ],
+            [
+                ".table",
+                [
+                    0.75,
+                    0.25,
+                    1.0,
+                    0.65625
+                ]
+            ]
+        ],
+        "prompt": "A rectangular room interior seen from above (bird's-eye layout), 256x256 pixel canvas. Place exactly four movable objects with non-overlapping boxes: bed, cupboard, chair, and table. The bed should anchor one side of the room (wall zone), aligned neatly with margins. The cupboard should sit along a wall with clearance so doors could open (keep it away from bed corners). The chair and table form a seating group: position the chair next to the table (small gap 2\u20138px, chair faces the table, same general cluster in adjacent quadrants). Keep walkspace in the center, balance visual weight (no clutter in one corner only), and prefer symmetric negative space for an aesthetically pleasing layout. Output only CSS boxes for these four labels: bed, cupboard, chair, table.",
+        "query_id": "room_demo_rect_01"
+    },
+    {
+        "iter": 3,
+        "object_list": [
+            [
+                ".bed",
+                [
+                    0.1953125,
+                    0.0390625,
+                    0.3515625,
+                    0.1171875
+                ]
+            ],
+            [
+                ".cupboard",
+                [
+                    0.859375,
+                    0.234375,
+                    0.9765625,
+                    0.328125
+                ]
+            ],
+            [
+                ".chair",
+                [
+                    0.5859375,
+                    0.3125,
+                    0.6328125,
+                    0.4609375
+                ]
+            ],
+            [
+                ".table",
+                [
+                    0.4296875,
+                    0.390625,
+                    0.59375,
+                    0.515625
+                ]
+            ]
+        ],
+        "prompt": "A rectangular room interior seen from above (bird's-eye layout), 256x256 pixel canvas. Place exactly four movable objects with non-overlapping boxes: bed, cupboard, chair, and table. The bed should anchor one side of the room (wall zone), aligned neatly with margins. The cupboard should sit along a wall with clearance so doors could open (keep it away from bed corners). The chair and table form a seating group: position the chair next to the table (small gap 2\u20138px, chair faces the table, same general cluster in adjacent quadrants). Keep walkspace in the center, balance visual weight (no clutter in one corner only), and prefer symmetric negative space for an aesthetically pleasing layout. Output only CSS boxes for these four labels: bed, cupboard, chair, table.",
+        "query_id": "room_demo_rect_01"
+    },
+    {
+        "iter": 4,
+        "object_list": [
+            [
+                "",
+                [
+                    -0.0390625,
+                    0.15625,
+                    0.078125,
+                    0.8984375
+                ]
+            ]
+        ],
+        "prompt": "A rectangular room interior seen from above (bird's-eye layout), 256x256 pixel canvas. Place exactly four movable objects with non-overlapping boxes: bed, cupboard, chair, and table. The bed should anchor one side of the room (wall zone), aligned neatly with margins. The cupboard should sit along a wall with clearance so doors could open (keep it away from bed corners). The chair and table form a seating group: position the chair next to the table (small gap 2\u20138px, chair faces the table, same general cluster in adjacent quadrants). Keep walkspace in the center, balance visual weight (no clutter in one corner only), and prefer symmetric negative space for an aesthetically pleasing layout. Output only CSS boxes for these four labels: bed, cupboard, chair, table.",
+        "query_id": "room_demo_rect_01"
+    }
+]

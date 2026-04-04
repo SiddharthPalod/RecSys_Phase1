@@ -1,0 +1,429 @@
+Context-Aware Conversational Layout
+Recommendation for Personalized Interior Design
+Siddharth Palod
+IMT2022002
+IIIT-Bangalore
+Siddharth Reddy Maramreddy
+IMT2022031
+IIIT-Bangalore
+Margasahayam Venkatesh Chirag
+IMT2022583
+IIIT-Bangalore
+Sai Venkata Sohith Gutta
+IMT2022042
+IIIT-Bangalore
+I. INTRODUCTION
+Interior design and furniture arrangement require balancing
+user preferences, spatial constraints, and design principles to
+create functional and aesthetically pleasing spaces. However,
+many users lack formal design expertise and often struggle to
+translate their preferences into effective room layouts. Recent
+advances in artificial intelligence have enabled automated
+interior layout generation through rule-based optimization and
+generative models. Despite these developments, most existing
+systems operate as one-shot layout generators, assuming that
+users can fully specify their requirements through a single
+prompt.
+In practice, interior design is often an iterative and exploratory
+process, where users refine their preferences while interacting
+with possible layout options. Conversational Recommender
+Systems (CRSs) provide a natural solution to this problem
+by engaging users in multi-turn dialogue to dynamically elicit
+preferences and refine recommendations. While CRSs have
+been widely applied in domains such as e-commerce and
+entertainment, their application to spatial design tasks such as
+furniture layout recommendation remains largely unexplored.
+To address this gap, we propose a Context-Aware Conver-
+sational Layout Recommendation framework that integrates
+spatial room modeling, conversational preference elicitation,
+and iterative layout refinement. The framework operates in
+three phases.
+Phase 1: The system constructs a structured room represen-
+tation from user-provided images, dimensions, and constraints
+while collecting high-level design preferences.
+Phase 2: A confidence-driven conversational recommender
+system interacts with the user to refine preferences and rec-
+ommend suitable layouts from a generated candidate set.
+Phase 3: The system supports iterative refinement, allowing
+users to request layout modifications that are regenerated and
+re-evaluated through the conversational loop until a satisfac-
+tory design is achieved.
+The main contributions of this work are as follows. First, we
+formulate interior layout design as a conversational recommen-
+dation problem. Second, we propose a three-phase framework
+combining room modeling, conversational reasoning, and lay-
+out generation. Finally, Our system focuses on confidence-
+driven dialog and iterative refinement to progressively con-
+verge to user-preferred layouts.f
+II. RELATED WORKS
+In recent years, Conversational Recommender Systems
+(CRSs) have surged in popularity by transforming traditional,
+static recommendation engines into dynamic, interactive ex-
+periences. Unlike static models that rely purely on historical
+data and struggle to understand the exact reasons behind a
+user’s preferences , CRSs solve this information asymmetry
+by eliciting dynamic user needs through real-time, multi-
+turn natural language interactions. As highlighted in recent
+comprehensive surveys [3], the development of CRSs involves
+complex challenges across multiple disciplines, including nat-
+ural language understanding, multi-turn dialogue strategies,
+and proactive question-based preference elicitation.
+While CRSs have been extensively explored and success-
+fully deployed in domains such as e-commerce, music, and
+movie recommendations, their application to complex, spa-
+tially aware tasks remains largely untouched. Specifically,
+furniture placement and interior design represent a distinct
+gap in the current literature. Most existing spatial layout
+systems lack the proactive, conversational intelligence required
+to guide users through the nuanced, multi-turn process of
+interior design. As demonstrated in the following subsections,
+recent works in furniture layout tend to operate either as one-
+shot synthesizers or passive executors, highlighting the need
+for a true CRS that can dynamically consult, recommend, and
+explain spatial design choices to users.
+A. INTERIORAGENT: LLM Agent for Interior Design-Aware
+3D Layout Generation
+In the INTERIORAGENT framework [4], 3D furniture
+layout generation is framed as a code-synthesis problem.
+Given a natural language prompt, an LLM-based program
+synthesizer generates an executable scene program using a
+custom Interior Design-aware Scene Description Language
+(IDSDL) to place furniture within a room. The resulting scene
+is then evaluated against a two-tiered set of interior design
+rules: hard physical constraints are checked mathematically
+(e.g., ClearanceConstraint for walkway space, CollisionCon-
+straint to prevent overlapping furniture), while aesthetic and
+relational rules are assessed by a Vision-Language Model
+(VLM) (e.g., ConversationConstraint to ensure seating faces
+each other). This multimodal feedback is fed back into the
+agent to iteratively refine the layout.
+A key distinction from our work lies in the interaction
+paradigm. INTERIORAGENT assumes the user already has a
+clear design vision and can fully articulate their requirements
+in a single initial prompt, with no support for conversational
+refinement or proactive recommendations. Our approach, by
+contrast, operates as a Conversational Recommender System
+(CRS) that engages users in multi-turn dialogue to elicit
+underlying preferences, dynamically recommends furniture
+placements, and explains the design rationale behind each
+suggestion, thereby assisting users who may lack formal
+design knowledge.
+B. Chat2Layout: Interactive 3D Furniture Layout with a Mul-
+timodal LLM
+Chat2Layout [9] introduces an interactive framework pow-
+ered by a Multimodal LLM (MLLM) for 3D spatial ar-
+rangement. The system operates through a continuous per-
+ception–reasoning–action loop: it receives user requirements
+alongside text descriptions and visual captures of the current
+scene, then employs Chain-of-Thought prompting to decom-
+pose high-level requests into atomic operations like adding,
+removing, translating, scaling, and rotating furniture. Decision-
+making is further supported by a ”Vision-Question Paradigm”
+combining visual-text prompting with an Offline-to-Online
+Search mechanism that retrieves reference layouts from a
+support set. The resulting actions update the scene, enabling
+iterative user feedback.
+While Chat2Layout establishes a genuine multi-turn con-
+versational interface, it functions primarily as an obedient
+executor rather than a proactive design consultant, still relying
+on the user to dictate each layout decision step by step. Our
+work addresses this gap: rather than following user instructions
+passively, our model analyzes the space and ongoing dialogue
+to proactively recommend optimal furniture placements, of-
+fering design-aware suggestions with explicit rationale and
+guiding users who may lack a clear initial vision or formal
+design expertise.
+C. DecoMind: A Generative AI System for Personalized Inte-
+rior Design Layouts
+DecoMind [1] introduces a generative AI framework for
+producing personalized interior design layouts based on user-
+provided inputs such as room type, design style, and furniture
+preferences. The system first employs CLIP to retrieve relevant
+furniture items from a dataset that match the user’s textual
+description. A preliminary layout containing these furniture
+items is then combined with a prompt and fed into a Stable
+Diffusion model with ControlNet to generate a visually coher-
+ent interior design that integrates the selected furniture. The
+generated designs are subsequently evaluated using classifiers
+to ensure that the final output aligns with the user’s specified
+preferences.
+However, the system primarily focuses on visual scene gen-
+eration rather than recommendation or interactive design as-
+sistance. It assumes that the user can provide all necessary
+preferences upfront and lacks mechanisms for multi-turn pref-
+erence elicitation or conversational refinement. Furthermore,
+the approach emphasizes image synthesis rather than explicit
+spatial reasoning or constraint-aware layout generation. In
+contrast, our work formulates interior layout design as a
+CRS, enabling iterative dialogue with users to dynamically
+discover preferences while recommending context-aware fur-
+niture placements.
+D. Interactive Context-Aware Furniture Recommendation us-
+ing Mixed Reality
+Interactive Context-Aware Furniture Recommendation
+using Mixed Reality [11] presents a system that leverages
+Mixed Reality (MR) devices such as HoloLens to recommend
+and visualize furniture within a user’s physical environment.
+The system captures spatial context from the surrounding
+scene and allows users to specify furniture categories through
+voice commands or gestures. Recommended furniture items
+are then placed virtually within the environment, enabling
+users to interact with them directly such as moving or resizing
+objects to better visualize how they fit within the space.
+While the framework effectively integrates spatial context
+with immersive visualization, it primarily operates as a visual
+recommendation and interaction tool rather than a conversa-
+tional design assistant. The system focuses mainly on furniture
+category selection and placement visualization, without incor-
+porating deeper contextual factors such as user preferences,
+room attributes, or cultural design constraints. In contrast,
+our approach employs a CRS that dynamically gathers user
+preferences and generates layout recommendations while con-
+sidering spatial constraints and design guidelines.
+E. Advancing User-Centric Evaluation and Design of Conver-
+sational Recommender Systems
+Advancing User-Centric Evaluation and Design of CRSs
+[6] authors focus on improving the design and evaluation of
+CRSs from a holistic user-centered perspective. They focus
+on user-centric evaluation of CRS, emphasizing factors such
+as empathy, trust, and interaction quality rather than purely
+system-level metrics.
+However, they focus on general CRS evaluation rather than
+domain-specific tasks involving spatial reasoning and layout
+generation.
+F. LayoutGPT: Compositional Visual Planning and Genera-
+tion with Large Language Models
+To address the challenge of burden on users to provide
+intricate constraints for visual generation, LayoutGPT [2]
+proposes a collaborative framework that uses LLMs as inter-
+mediate visual planners. The methodology uses a sequential
+pipeline where input text prompt is first processed by an LLM
+using CSS-based in-context learning. This helps the LLM
+translate abstract relations into structured layout arrangements.
+The model predicts unmentioned contexts and generates fine-
+grained descriptions to enrich the scene. These descriptions act
+as spatial constraints for 2D images and 3D scene generative
+models.
+Framing spatial planning as a language modeling task al-
+lows the model to translate high-level text into concrete visual
+plans. Therefore, LayoutGPT outperforms standard text-to-
+image baselines in accurately rendering the layout, matching
+the spatial accuracy of supervised methods.
+G. Make it Home: Automatic Optimization of Furniture Ar-
+rangement
+To automate synthesizing indoor scenes, Yu et al. [12]
+introduced a framework that synthesizes realistic furniture
+arrangements using ergonomic factors as constraints. The
+pipeline extracts spatial relations from baseline layouts, en-
+coding features like visibility and accessibility in them and
+integrating them into a global cost function optimized via
+Simulated Annealing. Although this approach handles heavy
+constraints and flexible conditions, the current design strictly
+assumes that the room has enough perimeter for wall-adjacent
+objects. Without sufficient wall space, optimization can settle
+for a local minimum, leaving wall-bound objects awkwardly
+detached. To address these limitations, unsupervised learning
+can be used to make it more robust to spatial relations, and
+account for properties like interior lighting, style and Vastu.
+H. ATISS: Autoregressive Transformers for Indoor Scene Syn-
+thesis
+ATISS [8] presents a novel autoregressive transformer
+architecture for synthesizing diverse and plausible indoor
+furniture layouts, given only the room type and its floor
+plan. Unlike prior approaches that frame scene synthesis as a
+sequence generation problem, ATISS treats a room as an un-
+ordered set of objects, leveraging the permutation equivariance
+of transformers to remain invariant to object ordering. The
+model is trained end-to-end using only labeled 3D bounding
+boxes as supervision and supports interactive use cases such
+as scene completion, partial room re-arrangement, and object
+suggestions for partially furnished rooms.
+While ATISS demonstrates strong performance in gener-
+ating realistic and diverse layouts, outperforming existing
+methods while being up to 8× faster, it operates as a purely
+generative model without any conversational or interactive
+preference-elicitation mechanism. Users cannot iteratively re-
+fine layouts through dialogue, nor does the system proactively
+recommend placements based on user-expressed preferences.
+In contrast, our proposed framework embeds such a layout
+generation capability within a Conversational Recommender
+System (CRS), enabling multi-turn dialogue to dynamically
+elicit user preferences and guide spatial design decisions.
+I. Interactive Interior Design Recommendation via Coarse-to-
+fine Multimodal Reinforcement Learning
+IIDRS [13] proposes an Interactive Interior Design Recom-
+mendation System that mines homeowners’ hidden preferences
+through iterative user interaction using Reinforcement Learn-
+ing (RL). Rather than relying on a single upfront specification,
+the system engages users in multiple rounds of interaction
+where users provide textual feedback on the gap between the
+recommended decoration plan and their ideal one. To handle
+the large action space of possible furniture decorations effi-
+ciently, the authors introduce a Decoration Recommendation
+Coarse-to-Fine Policy Network (DecorRCFN), a two-stage
+policy structure consisting of a coarse-grained module that
+narrows down candidate actions and a fine-grained module that
+models multimodal state-action interactions to make the final
+selection. Additionally, an object-aware feedback generation
+method is proposed to augment training with diverse and
+dynamic textual feedback, improving generalization to unseen
+online scenarios.
+While IIDRS introduces a genuinely interactive, feedback-
+driven recommendation loop and demonstrates strong per-
+formance over traditional baselines, it focuses primarily on
+decoration item selection rather than full spatial layout gen-
+eration with explicit furniture placement and room constraint
+reasoning. Furthermore, the system relies on RL-based policy
+learning rather than conversational dialogue, limiting its ability
+to proactively guide users or explain design rationale in
+natural language. In contrast, our proposed framework adopts
+a Conversational Recommender System (CRS) approach that
+combines multi-turn natural language dialogue with spatial
+reasoning to recommend and justify complete furniture ar-
+rangements within a room.
+J. Other Works
+Merrell et al. [5] proposes an interactive furniture lay-
+out system that assists users by encoding interior design
+guidelines into a density function. By evaluating the spatial
+configurations, their approach improves the quality of arrange-
+ments produced by individuals without prior design training.
+To address the disconnect between scene understanding and
+individual object reconstruction, Nie et al. [7] proposes an
+end-to-end framework that jointly recovers room layout, 3D
+bounding boxes, and object meshes from a single image. By
+using contextual dependencies between these components, this
+approach shows that learning these subtasks together improves
+performance for indoor layout estimation, object detection and
+mesh reconstruction. To address the issue of integrating recom-
+mendation and conversation modules in CRS, Wang et al. [10]
+proposes UniCRS, a unified framework driven by knowledge-
+enhanced prompt learning. It uses a fixed pre-trained model,
+utilizing customized prompts that have knowledge represen-
+tations, and generated response templates to combine the
+2 subtasks. This approach aligns the recommendation and
+conversation objectives, showing significant improvement in
+performance compared to prior methods.
+III. PROPOSED METHODOLOGY
+Fig. 1 illustrates the end-to-end pipeline of our pro-
+posed Context-Aware Conversational Layout Recommenda-
+tion framework, organized into three distinct phases: room
+construction and layout generation (Phase 1), conversational
+recommendation (Phase 2), and iterative refinement (Phase 3).
+Fig. 1. Overview of the proposed three-phase framework. Phase 1 constructs the room model and generates initial layouts. Phase 2 runs the confidence-driven
+conversational recommendation loop. Phase 3 handles user-directed iterative refinement, feeding updated layouts back into Phase 2.
+A. Phase 1: Room Construction and Layout Generation
+Phase 1 is responsible for building a structured spatial
+representation of the target room and generating an initial set
+of candidate layouts. It consists of two parallel input streams
+that converge at the layout generation stage.
+The first stream handles room sensing. The user provides
+room photographs, physical dimensions, and spatial con-
+straints. These inputs are processed to construct a digital room
+model in the form of a mesh, a 3D or 2D scene representation,
+and a scene graph encoding the geometric properties of the
+space.
+The second stream handles preference collection. The user
+specifies high-level design preferences, including Vastu guide-
+lines, desired style, and the number and type of furniture items
+to be placed.
+Both streams feed into the Layout Generator, which pro-
+duces a set of candidate layout scripts and layout images.
+These layouts are stored and subsequently treated as items
+for recommendation in Phase 2.
+B. Phase 2: Conversational Recommendation
+Phase 2 forms the core recommendation loop of the system,
+driven by a Conversational Recommender System (CRS) that
+dynamically elicits and refines user preferences through multi-
+turn dialogue.
+Upon receiving the generated layouts and user context from
+Phase 1, the CRS enters a confidence-based decision loop. A
+confidence score is computed over the current understanding
+of the user’s preferences. If the score falls below a prede-
+fined threshold, the system invokes an Ask Questions module,
+which conducts a targeted conversational exchange to gather
+additional preference information. This loop continues until
+the confidence score exceeds the threshold, at which point the
+system proceeds to recommendation.
+The Recommend Layout module then surfaces the top-K
+candidate layouts, or a single best layout, to the user. The user
+reviews the presented options and provides explicit feedback
+via a User Feedback decision gateway. If the user is satisfied,
+the session terminates, and the chosen layout is returned as the
+final output. If the user is not satisfied, the system transitions
+to Phase 3 for iterative refinement.
+C. Phase 3: Iterative Refinement
+Phase 3 handles the case where the user wishes to modify
+the recommended layout. A dedicated Conversational Rec-
+ommendation System module engages the user in a focused
+dialogue to understand the nature of the desired modifications,
+such as repositioning furniture, swapping items, or adjusting
+spatial arrangements.
+Based on the gathered modification intent, the Add/Move
+Furniture module updates the layout script accordingly. A
+Generate New step then produces fresh layout images reflect-
+ing the requested changes, which are stored and fed back into
+Phase 2 as an updated item set. Phase 2 is then re-executed
+with the refined layouts, forming a closed refinement loop that
+iterates until the user is satisfied.
+REFERENCES
+[1] Reema Alshehri, Rawan Alotaibi, Leen Almasri, and Rawan Altaweel.
+DecoMind: A Generative AI System for Personalized Interior Design
+Layouts, 2025.
+[2] Weixi Feng, Wanrong Zhu, Tsu-jui Fu, Varun Jampani, Arjun Akula,
+Xuehai He, Sugato Basu, Xin Eric Wang, and William Yang Wang.
+LayoutGPT: Compositional Visual Planning and Generation with Large
+Language Models.
+In Advances in Neural Information Processing
+Systems, 2023.
+[3] Chongming Gao, Wenqiang Lei, Xiangnan He, Maarten de Rijke, and
+Tat-Seng Chua.
+Advances and challenges in conversational recom-
+mender systems: A survey. AI Open, 2:100–126, 2021.
+[4] Kunal Gupta, Ishit Mehta, Kun Wang, Nicholas Chua, Abhimanyu
+Krishna, Yan Deng, Ravi Ramamoorthi, and Manmohan Chandraker.
+INTERIORAGENT: LLM Agent for Interior Design aware 3D Layout
+Generation. In Thirteenth International Conference on 3D Vision.
+[5] Paul Merrell, Eric Schkufza, Zeyang Li, Maneesh Agrawala, and Vladlen
+Koltun. Interactive Furniture Layout Using Interior Design Guidelines.
+In ACM SIGGRAPH 2011 Papers, New York, NY, USA, 2011. Associ-
+ation for Computing Machinery.
+[6] Michael M¨uller.
+Advancing User-Centric Evaluation and Design of
+Conversational Recommender Systems.
+In Proceedings of the Nine-
+teenth ACM Conference on Recommender Systems, RecSys ’25, page
+1445–1450, New York, NY, USA, 2025. Association for Computing
+Machinery.
+[7] Yinyu Nie, Xiaoguang Han, Shihui Guo, Yujian Zheng, Jian Chang,
+and Jian Jun Zhang. Total3DUnderstanding: Joint Layout, Object Pose
+and Mesh Reconstruction for Indoor Scenes from a Single Image. In
+Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition, 2020.
+[8] Despoina Paschalidou, Amlan Kar, Maria Shugrina, Karsten Kreis,
+Andreas Geiger, and Sanja Fidler. ATISS: autoregressive transformers
+for indoor scene synthesis. CoRR, abs/2110.03675, 2021.
+[9] Can Wang, Hongliang Zhong, Menglei Chai, Mingming He, Dongdong
+Chen, and Jing Liao. Chat2Layout: Interactive 3D Furniture Layout With
+a Multimodal LLM. IEEE Transactions on Visualization and Computer
+Graphics, 32(2):2243–2259, 2026.
+[10] Xiaolei Wang, Kun Zhou, Ji-Rong Wen, and Wayne Xin Zhao.
+To-
+wards Unified Conversational Recommender Systems via Knowledge-
+Enhanced Prompt Learning. In Proceedings of the 28th ACM SIGKDD
+Conference on Knowledge Discovery and Data Mining, 2022.
+[11] Hongfei Yu, Wei Liang, Shihao Song, Bing Ning, and Yixin Zhu. Inter-
+active Context-Aware Furniture Recommendation using Mixed Reality.
+In 2021 IEEE Conference on Virtual Reality and 3D User Interfaces
+Abstracts and Workshops (VRW), pages 450–451, 2021.
+[12] Lap-Fai Yu, Sai-Kit Yeung, Chi-Keung Tang, Demetri Terzopoulos,
+Tony F. Chan, and Stanley J. Osher.
+Make it Home: Automatic
+Optimization of Furniture Arrangement. ACM Transactions on Graphics
+(TOG), 30(4):86:1–86:11, 2011.
+[13] He Zhang, Ying Sun, Weiyu Guo, Yafei Liu, Haonan Lu, Xiaodong
+Lin, and Hui Xiong.
+Interactive interior design recommendation via
+coarse-to-fine multimodal reinforcement learning.
+In Proceedings of
+the 31st ACM International Conference on Multimedia, MM ’23, page
+6472–6480. ACM, October 2023.
