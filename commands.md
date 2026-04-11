@@ -3,6 +3,8 @@ python run_layoutgpt_2d.py --llm_type ollama --icl_type fixed-random --setting c
 
 python run_layoutgpt_2d.py --llm_type ollama --icl_type fixed-random --setting room --n_iter 5 --test --verbose
 
+python run_layoutgpt_2d.py --llm_type ollama --ollama_model llama3.2:1b --ollama_temperature 0.95 --ollama_top_p 0.95 --ollama_num_predict 512 --icl_type fixed-random --setting counting --val_json prompt_lists/room_prompts_v1.json --n_iter 5 --output_file llm_output/counting/ollama.counting.room_dataset.json --resume --incremental      
+
 High-variation dataset generation with Ollama (many prompts, incl. empty/dense rooms):
 python make_room_prompt_list.py --out prompt_lists/room_prompts_v1.json --n 2000 --seed 123
 python run_layoutgpt_2d.py --llm_type ollama --ollama_model llama3.2:1b --ollama_temperature 0.95 --ollama_top_p 0.95 --ollama_num_predict 512 --icl_type fixed-random --setting counting --val_json prompt_lists/room_prompts_v1.json --n_iter 5 --verbose --output_file llm_output/counting/ollama.counting.room_dataset.json
