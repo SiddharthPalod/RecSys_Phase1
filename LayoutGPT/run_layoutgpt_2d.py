@@ -8,15 +8,10 @@ from tqdm import tqdm
 import time
 import random
 import argparse
-import google.generativeai as genai
+import re
 from transformers import GPT2TokenizerFast, LlamaForCausalLM, LlamaTokenizer
 import transformers
 from utils import *
-
-from dotenv import load_dotenv
-load_dotenv()
-
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
 # GPT-3 Type
 llm_name2id = {
@@ -42,6 +37,9 @@ parser.add_argument(
 parser.add_argument('--matching_content_type', type=str, default='visual')
 parser.add_argument('--llm_type', type=str, default='gpt4', choices=list(llm_name2id.keys()))
 parser.add_argument('--ollama_model', type=str, default='llama3.2:1b')
+parser.add_argument('--ollama_temperature', type=float, default=0.9)
+parser.add_argument('--ollama_top_p', type=float, default=0.95)
+parser.add_argument('--ollama_num_predict', type=int, default=512)
 parser.add_argument('--icl_type', type=str, default='k-similar', choices=['fixed-random', 'k-similar'])
 parser.add_argument('--K', type=int, default=8)
 parser.add_argument('--gpt_input_length_limit', type=int, default=3000)
@@ -49,6 +47,53 @@ parser.add_argument('--canvas_size', type=int, default=256)
 parser.add_argument("--n_iter", type=int, default=1)
 parser.add_argument("--test", action='store_true')
 parser.add_argument('--verbose', default=False, action='store_true')
+parser.add_argument(
+    '--verbose_prompt',
+    action='store_true',
+    help='When --verbose is set, print full prompt payload instead of compact summary.',
+)
+parser.add_argument(
+    '--seed',
+    type=int,
+    default=42,
+    help='Random seed for exemplar selection/shuffling (affects fixed-random ICL and any prompt-list shuffles).',
+)
+parser.add_argument(
+    '--val_json',
+    type=str,
+    default=None,
+    help='Optional path to a custom validation prompt list JSON. Must be a list of {id, prompt} objects.',
+)
+parser.add_argument(
+    '--val_limit',
+    type=int,
+    default=None,
+    help='Optional limit on number of val prompts processed (after --test slicing).',
+)
+parser.add_argument(
+    '--output_file',
+    type=str,
+    default=None,
+    help='Optional explicit output path. If not set, uses the default naming under --base_output_dir/--setting.',
+)
+parser.add_argument(
+    '--resume',
+    action='store_true',
+    help='If output exists, load and append only missing (query_id, iter) pairs instead of exiting early.',
+)
+parser.add_argument(
+    '--output_format',
+    type=str,
+    default='json',
+    choices=['json', 'jsonl'],
+    help='Write output as a JSON list (json) or JSON Lines (jsonl).',
+)
+parser.add_argument(
+    '--incremental',
+    action='store_true',
+    help='Rewrite the output file after each prompt (default: write only once at the end). '
+         'Use this so you see partial results and can resume if the run stops early.',
+)
 parser.add_argument(
     '--room_prompt',
     action='store_true',
@@ -280,7 +325,15 @@ def ollama_generation(prompt_for_llm, model, args, eos_token_id=None, **kwargs):
     
     for _ in range(args.n_iter):
         try:
-            res = chat(model=ollama_model, messages=messages)
+            res = chat(
+                model=ollama_model,
+                messages=messages,
+                options={
+                    "temperature": args.ollama_temperature,
+                    "top_p": args.ollama_top_p,
+                    "num_predict": args.ollama_num_predict,
+                },
+            )
             text = res.get('message', {}).get('content', '')
             response_texts.append(text)
             fake_choices.append({"message": {"content": text}})
@@ -298,6 +351,8 @@ def ollama_generation(prompt_for_llm, model, args, eos_token_id=None, **kwargs):
 
 
 def gpt_generation(prompt_for_gpt, f_gpt_create, args, **kwargs):
+    import google.generativeai as genai
+
     system_prompt = None
     prompt_str = ""
     if args.llm_type == 'gpt3.5':
@@ -345,26 +400,92 @@ def gpt_generation(prompt_for_gpt, f_gpt_create, args, **kwargs):
     return response_text, response
 
 
+def _extract_layout_candidate_lines(raw_text: str):
+    """
+    Keep only CSS-like candidate lines from a model response.
+    This makes parsing robust to markdown fences and extra prose.
+    """
+    lines = []
+    for line in raw_text.split('\n'):
+        s = line.strip()
+        if not s:
+            continue
+        s = s.strip('`')
+        # Accept lines that look like: label { ... }
+        if '{' in s and '}' in s and ':' in s:
+            s = re.sub(r'^\s*[-*]\s*', '', s)
+            lines.append(s)
+    return lines
+
+
+def _compact_prompt_preview(prompt_for_gpt):
+    """Compact one-line preview to avoid heavy terminal I/O for large jobs."""
+    if isinstance(prompt_for_gpt, str):
+        s = prompt_for_gpt.replace('\n', ' ')
+        return s[:240] + ('...' if len(s) > 240 else '')
+
+    try:
+        final_user = ''
+        for msg in reversed(prompt_for_gpt):
+            if msg.get('role') == 'user':
+                final_user = msg.get('content', '')
+                break
+        s = final_user.replace('\n', ' ')
+        return s[:240] + ('...' if len(s) > 240 else '')
+    except Exception:
+        s = str(prompt_for_gpt).replace('\n', ' ')
+        return s[:240] + ('...' if len(s) > 240 else '')
+
+
+def _write_predictions(output_filename, rows, output_format):
+    d = os.path.dirname(os.path.abspath(output_filename))
+    if d:
+        os.makedirs(d, exist_ok=True)
+    if output_format == 'jsonl':
+        with open(output_filename, 'w', encoding='utf-8') as fout:
+            for obj in rows:
+                fout.write(json.dumps(obj, ensure_ascii=False) + '\n')
+    else:
+        with open(output_filename, 'w', encoding='utf-8') as fout:
+            json.dump(rows, fout, indent=4, sort_keys=True)
+
+
 def _main(args):
+    # Lazy-load dotenv for API-backed models only; Ollama users do not need it installed.
+    if 'gpt' in args.llm_type:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except Exception:
+            pass
+
+        import google.generativeai as genai
+        genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+
     # Room demos reuse NSR-1K counting splits for in-context examples only.
     icl_data_setting = 'counting' if args.setting == 'room' else args.setting
 
     # check if have been processed
     args.output_dir = os.path.join(args.base_output_dir, args.setting)
     os.makedirs(args.output_dir, exist_ok=True)
-    out_stem = f'{args.llm_type}.{args.setting}'
+    out_stem = f'{args.llm_type}.{args.setting}.seed_{args.seed}'
     if args.room_prompt and args.setting != 'room':
         out_stem += '.room_prompt'
-    output_filename = os.path.join(
+    default_output_filename = os.path.join(
         args.output_dir,
-        f'{out_stem}.{args.icl_type}.k_{args.K}.px_{args.canvas_size}.json',
+        f'{out_stem}.{args.icl_type}.k_{args.K}.px_{args.canvas_size}.{args.output_format}',
     )
-    if os.path.exists(output_filename):
-        print(f'{output_filename} have been processed.')
+    output_filename = args.output_file or default_output_filename
+    if os.path.exists(output_filename) and not args.resume:
+        print(f'{output_filename} already exists. Pass --resume to append missing items, or choose --output_file.')
         return
 
     # load val examples
-    if args.setting == 'room' or args.room_prompt:
+    if args.val_json is not None:
+        val_example_list = json.load(open(args.val_json))
+        if args.test:
+            val_example_list = val_example_list[:3]
+    elif args.setting == 'room' or args.room_prompt:
         val_example_list = room_layout_val_examples(test_slice=args.test)
     else:
         val_example_files = os.path.join(
@@ -374,6 +495,8 @@ def _main(args):
         val_example_list = json.load(open(val_example_files))
         if args.test:
             val_example_list = val_example_list[:3]
+    if args.val_limit is not None:
+        val_example_list = val_example_list[:args.val_limit]
 
     # load all training examples (ICL pool)
     train_example_files = os.path.join(
@@ -382,7 +505,7 @@ def _main(args):
     )
     train_examples = json.load(open(train_example_files))
     if args.icl_type == 'fixed-random':
-        random.seed(42)
+        random.seed(args.seed)
         random.shuffle(train_examples)
         supporting_examples = train_examples[:args.K]
         features = None
@@ -394,6 +517,28 @@ def _main(args):
     args.llm_id = llm_name2id[args.llm_type]
     all_prediction_list = []
     all_responses = []
+    existing_keys = set()
+    if args.resume and os.path.exists(output_filename):
+        try:
+            if args.output_format == 'jsonl':
+                with open(output_filename, 'r', encoding='utf-8') as fin:
+                    for line in fin:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        obj = json.loads(line)
+                        all_prediction_list.append(obj)
+                        existing_keys.add((obj.get('query_id'), obj.get('iter')))
+            else:
+                existing = json.load(open(output_filename, 'r', encoding='utf-8'))
+                if isinstance(existing, list):
+                    all_prediction_list.extend(existing)
+                    for obj in existing:
+                        existing_keys.add((obj.get('query_id'), obj.get('iter')))
+        except Exception as e:
+            print(f'Warning: failed to resume from existing output ({e}). Starting fresh.')
+            all_prediction_list = []
+            existing_keys = set()
 
     if args.llm_type.startswith('llama-'):
         f_form_prompt = form_prompt_for_gpt3
@@ -433,6 +578,21 @@ def _main(args):
 
     for val_example in tqdm(val_example_list, total=len(val_example_list), desc='test'):
         top_k = args.K
+        val_id = val_example.get('id', None)
+        if val_id is None:
+            # allow {query_id, prompt} or just {prompt}
+            val_id = val_example.get('query_id', None) or f'custom_{abs(hash(val_example.get("prompt","")))%10**12}'
+
+        # If resuming, skip prompts where all iters are already present.
+        if args.resume:
+            missing_any = False
+            for i_iter in range(args.n_iter):
+                if (val_id, i_iter) not in existing_keys:
+                    missing_any = True
+                    break
+            if not missing_any:
+                continue
+
         prompt_for_gpt = f_form_prompt(
             text_input=val_example['prompt'],
             top_k=top_k,
@@ -441,7 +601,10 @@ def _main(args):
             features=features
         )
         if args.verbose:
-            print(prompt_for_gpt)
+            if args.verbose_prompt:
+                print(prompt_for_gpt)
+            else:
+                print(f'[verbose] query_id={val_id} prompt={_compact_prompt_preview(prompt_for_gpt)}')
             print('\n' + '-'*30)
 
         while True:
@@ -481,10 +644,13 @@ def _main(args):
                     time.sleep(5)
 
         all_responses.append(response)
+        appended_this_prompt = False
         for i_iter in range(args.n_iter):
+            if args.resume and (val_id, i_iter) in existing_keys:
+                continue
             # parse output
             predicted_object_list = []
-            line_list = response[i_iter].split('\n')
+            line_list = _extract_layout_candidate_lines(response[i_iter])
                 
             for line in line_list:
                 if line == '':
@@ -492,21 +658,24 @@ def _main(args):
                 try:
                     selector_text, bbox = parse_layout(line, canvas_size=args.canvas_size)
                     if selector_text == None:
-                        print(line)
+                        if args.verbose:
+                            print(f'[verbose] skipped unparsable line: {line}')
                         continue
                     predicted_object_list.append([selector_text, bbox])
                 except ValueError as e:
                     pass
             all_prediction_list.append({
-                'query_id': val_example['id'],
+                'query_id': val_id,
                 'iter': i_iter,
                 'prompt': val_example['prompt'],
                 'object_list': predicted_object_list,
             })
+            appended_this_prompt = True
+        if args.incremental and appended_this_prompt:
+            _write_predictions(output_filename, all_prediction_list, args.output_format)
 
-    # save output
-    with open(output_filename, 'w') as fout:
-        json.dump(all_prediction_list, fout, indent=4, sort_keys=True)
+    # save output (full write at end; redundant if --incremental, keeps same behavior)
+    _write_predictions(output_filename, all_prediction_list, args.output_format)
     print(f'LayoutGPT ({args.llm_type}) prediction results written to {output_filename}')
 
 
