@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Layout Visualizer</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f5f7fb;
+            color: #1e293b;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .panel {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 { 
+            margin-top: 0; 
+            color: #2563eb; 
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 13px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button, select {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+        }
+
+        button:hover { 
+            background: #1d4ed8; 
+        }
+
+        select { 
+            background: #ffffff; 
+            color: #1e293b; 
+            border: 1px solid #cbd5e1;
+            flex-grow: 1; 
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 20px;
+            gap: 10px;
+        }
+
+        #room-canvas {
+            width: 350px;
+            height: 350px;
+            background: #ffffff;
+            position: relative;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.08);
+            overflow: visible;
+            border: 2px solid #cbd5e1;
+        }
+
+        .object-box {
+            position: absolute;
+            border: 2px solid rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #0f172a;
+            text-shadow: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .object-box:hover {
+            z-index: 10;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            border-color: #2563eb;
+        }
+
+        .empty-state {
+            color: #64748b;
+            text-align: center;
+            margin-top: 150px;
+            font-style: italic;
+        }
+
+        #canvas-meta {
+            font-size: 12px;
+            color: #475569;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="panel">
+            <h2>1. Input JSON Data</h2>
+            <textarea id="jsonInput" placeholder="Paste your layout JSON array here..."></textarea>
+            <div class="controls">
+                <button onclick="parseAndLoad()">Load Layouts</button>
+                <select id="iterationSelect" onchange="drawLayout()" disabled>
+                    <option>Awaiting data...</option>
+                </select>
+            </div>
+            <p style="font-size: 12px; color: #a6adc8; margin-top: 15px;">
+                *Note: This visualizer assumes LayoutGPT coordinates: <b>[x_min, y_min, x_max, y_max]</b> normalized between 0 and 1.
+            </p>
+        </div>
+
+        <div class="panel">
+            <h2>2. Bird's-eye View</h2>
+            <div class="canvas-wrapper">
+                <div id="room-canvas">
+                    <div class="empty-state">Paste JSON and click Load to visualize</div>
+                </div>
+                <div id="canvas-meta"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let layoutData = [];
+
+        // Color palette for different object types
+        const colorMap = {
+            bed: '#f38ba8',       // Red/Pink
+            cupboard: '#fab387',  // Peach/Orange
+            chair: '#a6e3a1',     // Green
+            table: '#89dceb',     // Blue
+            default: '#cba6f7'    // Purple for unknown items
+        };
+
+        function extractCanvasDimensions(promptText) {
+            const text = String(promptText || '');
+            const match = text.match(/(\d+)\s*x\s*(\d+)\s*pixel\s*canvas/i);
+            if (!match) return null;
+
+            const width = Number(match[1]);
+            const height = Number(match[2]);
+            if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+                return null;
+            }
+            return { width, height };
+        }
+
+        function setCanvasSizeFromPrompt(layout) {
+            const canvas = document.getElementById('room-canvas');
+            const meta = document.getElementById('canvas-meta');
+            const dims = extractCanvasDimensions(layout?.prompt);
+            const maxDisplay = 420;
+
+            if (!dims) {
+                canvas.style.width = '350px';
+                canvas.style.height = '350px';
+                meta.textContent = 'Prompt dimensions not detected. Using 1:1 fallback.';
+                return;
+            }
+
+            if (dims.width >= dims.height) {
+                canvas.style.width = `${maxDisplay}px`;
+                canvas.style.height = `${Math.round((dims.height / dims.width) * maxDisplay)}px`;
+            } else {
+                canvas.style.height = `${maxDisplay}px`;
+                canvas.style.width = `${Math.round((dims.width / dims.height) * maxDisplay)}px`;
+            }
+
+            meta.textContent = `Canvas from prompt: ${dims.width} x ${dims.height}`;
+        }
+
+        function detectCoordinateMode(objects, dims) {
+            let maxCoord = 0;
+            for (const obj of objects) {
+                if (!Array.isArray(obj) || !Array.isArray(obj[1]) || obj[1].length < 4) continue;
+                for (const value of obj[1].slice(0, 4)) {
+                    const n = Number(value);
+                    if (Number.isFinite(n)) maxCoord = Math.max(maxCoord, Math.abs(n));
+                }
+            }
+            // If values are above 1, they are likely absolute pixel values.
+            if (dims && maxCoord > 1.5) return 'pixels';
+            return 'normalized';
+        }
+
+        function normalizeBBox(coords, mode, dims) {
+            let x0 = Number(coords[0]);
+            let y0 = Number(coords[1]);
+            let x1 = Number(coords[2]);
+            let y1 = Number(coords[3]);
+
+            if (![x0, y0, x1, y1].every(Number.isFinite)) return null;
+
+            // Ensure min/max order.
+            if (x0 > x1) [x0, x1] = [x1, x0];
+            if (y0 > y1) [y0, y1] = [y1, y0];
+
+            if (mode === 'pixels' && dims) {
+                x0 /= dims.width;
+                x1 /= dims.width;
+                y0 /= dims.height;
+                y1 /= dims.height;
+            }
+
+            // Clamp to room boundaries to avoid rendering weird artifacts.
+            x0 = Math.min(1, Math.max(0, x0));
+            y0 = Math.min(1, Math.max(0, y0));
+            x1 = Math.min(1, Math.max(0, x1));
+            y1 = Math.min(1, Math.max(0, y1));
+
+            if (x1 <= x0 || y1 <= y0) return null;
+            return [x0, y0, x1, y1];
+        }
+
+        function boxesOverlap(a, b) {
+            const [ax0, ay0, ax1, ay1] = a;
+            const [bx0, by0, bx1, by1] = b;
+            const noOverlap = ax1 <= bx0 || bx1 <= ax0 || ay1 <= by0 || by1 <= ay0;
+            return !noOverlap;
+        }
+
+        function countOverlaps(objects) {
+            const boxes = objects
+                .filter(obj => Array.isArray(obj) && Array.isArray(obj[1]) && obj[1].length >= 4)
+                .map(obj => obj[1]);
+
+            let overlapPairs = 0;
+            for (let i = 0; i < boxes.length; i++) {
+                for (let j = i + 1; j < boxes.length; j++) {
+                    if (boxesOverlap(boxes[i], boxes[j])) overlapPairs += 1;
+                }
+            }
+            return overlapPairs;
+        }
+
+        function normalizeRawJson(raw) {
+            const trimmed = raw.trim();
+            if (!trimmed) {
+                throw new Error('Input is empty.');
+            }
+
+            // Handle common copy-paste case from inside a JSON array:
+            // { ... },
+            if (trimmed.startsWith('{') && trimmed.endsWith('},')) {
+                return `[${trimmed.slice(0, -1)}]`;
+            }
+
+            // Handle single object paste: { ... }
+            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                return `[${trimmed}]`;
+            }
+
+            return trimmed;
+        }
+
+        function toLayoutArray(parsed) {
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && typeof parsed === 'object') return [parsed];
+            throw new Error('Parsed data must be a layout object or array of layout objects.');
+        }
+
+        function parseAndLoad() {
+            const rawJson = document.getElementById('jsonInput').value;
+            const select = document.getElementById('iterationSelect');
+            
+            try {
+                const normalizedRaw = normalizeRawJson(rawJson);
+                const parsed = JSON.parse(normalizedRaw);
+                layoutData = toLayoutArray(parsed);
+                layoutData = layoutData.filter(item => item && Array.isArray(item.object_list));
+                if (layoutData.length === 0) {
+                    throw new Error('No valid layout entries found. Each entry needs an object_list array.');
+                }
+                
+                // Populate the dropdown
+                select.innerHTML = '';
+                layoutData.forEach((layout, index) => {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    const iterLabel = (layout.iter !== undefined) ? layout.iter : index;
+                    const qidLabel = layout.query_id ? ` | ${layout.query_id}` : '';
+                    opt.textContent = `Iteration ${iterLabel}${qidLabel}`;
+                    select.appendChild(opt);
+                });
+                
+                select.disabled = false;
+                drawLayout(); // Draw the first one automatically
+                
+            } catch (error) {
+                alert(`Error parsing JSON: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        function drawLayout() {
+            const canvas = document.getElementById('room-canvas');
+            const select = document.getElementById('iterationSelect');
+            const meta = document.getElementById('canvas-meta');
+            
+            // Clear current canvas
+            canvas.innerHTML = '';
+            
+            if (!layoutData || layoutData.length === 0) return;
+            
+            const currentIteration = layoutData[select.value];
+            const objects = currentIteration.object_list;
+            setCanvasSizeFromPrompt(currentIteration);
+            const dims = extractCanvasDimensions(currentIteration?.prompt);
+            const coordMode = detectCoordinateMode(objects || [], dims);
+
+            if (!objects || objects.length === 0) {
+                canvas.innerHTML = '<div class="empty-state">No objects mapped in this iteration.</div>';
+                return;
+            }
+
+            const normalizedForOverlap = [];
+            let skippedObjects = 0;
+
+            objects.forEach(obj => {
+                if (!Array.isArray(obj) || obj.length < 2 || !Array.isArray(obj[1]) || obj[1].length < 4) {
+                    skippedObjects += 1;
+                    return;
+                }
+                const rawLabel = obj[0];
+                const cleanLabel = String(rawLabel).replace('.', '').trim();
+                const coords = obj[1];
+
+                // LayoutGPT format: [x_min, y_min, x_max, y_max]
+                const normalized = normalizeBBox(coords, coordMode, dims);
+                if (!normalized) {
+                    skippedObjects += 1;
+                    return;
+                }
+                normalizedForOverlap.push(normalized);
+                const x_min = normalized[0];
+                const y_min = normalized[1];
+                const x_max = normalized[2];
+                const y_max = normalized[3];
+
+                // Calculate CSS percentages
+                const top = y_min * 100;
+                const left = x_min * 100;
+                const height = (y_max - y_min) * 100;
+                const width = (x_max - x_min) * 100;
+
+                // Create the DOM element for the box
+                const box = document.createElement('div');
+                box.className = 'object-box';
+                box.style.top = `${top}%`;
+                box.style.left = `${left}%`;
+                box.style.height = `${height}%`;
+                box.style.width = `${width}%`;
+                
+                // Styling based on label
+                box.style.backgroundColor = colorMap[cleanLabel.toLowerCase()] || colorMap.default;
+                box.textContent = cleanLabel || '?';
+                
+                // Add a tooltip with exact coordinates for debugging
+                box.title = `${cleanLabel}\nRaw: [${coords.map(c => Number(c).toFixed(3)).join(', ')}]\nNormalized: [${normalized.map(c => c.toFixed(3)).join(', ')}]`;
+
+                canvas.appendChild(box);
+            });
+
+            const overlapPairs = countOverlaps(normalizedForOverlap.map(b => ['obj', b]));
+            meta.textContent += ` | Coord mode: ${coordMode}`;
+            if (overlapPairs > 0) meta.textContent += ` | Overlap pairs in data: ${overlapPairs}`;
+            if (skippedObjects > 0) meta.textContent += ` | Skipped invalid boxes: ${skippedObjects}`;
+        }
+    </script>
+</body>
+</html>

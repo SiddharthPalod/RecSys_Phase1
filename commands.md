@@ -1,3 +1,18 @@
+<!-- Phase 1 Terminal Generation Command -->
+python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json"
+
+python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --show_results --filtered_items_out
+
+Without Launching LayoutGPT
+python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --dry_run
+
+Status of BG Jobs
+python "Phase1/layout_terminal_interface.py" --job_status
+
+Non-interactive rerun to update filter.json file
+python "Phase1/layout_terminal_interface.py" --dataset "Phase1/room_dataset_cleaned.json" --show_results --filtered_items_out "Phase1/filter.json" --dry_run
+
+<!-- Layout GPT JSON Generation Commands -->
 2D Layout Synthesis (using local Ollama):
 python run_layoutgpt_2d.py --llm_type ollama --icl_type fixed-random --setting counting --n_iter 5 --test --verbose
 
