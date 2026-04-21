@@ -1,7 +1,7 @@
 <!-- Phase 1 Terminal Generation Command -->
 python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json"
 
-python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --show_results --filtered_items_out
+python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --show_results --filtered_items_out "Phase1/filter.json"
 
 Without Launching LayoutGPT
 python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --dry_run

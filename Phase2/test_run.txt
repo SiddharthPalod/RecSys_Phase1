@@ -1,0 +1,62 @@
+PS D:\Siddharth\Downloads\133_INTERIORAGENT_LLM_Agent_fo_Supplementary Material\LayoutGPT> python -m Phase2.cli.interactive
+=== Phase2 Conversational CRS CLI ===
+Session: 282f3148-dfb0-431f-92ce-413945180097
+Model: llama3.2:1b
+Filter: D:\Siddharth\Downloads\133_INTERIORAGENT_LLM_Agent_fo_Supplementary Material\LayoutGPT\Phase1\filter.json
+
+CRS preference elicitation:
+
+[LLM] Q1 (confidence=0.00). What is the primary activity you would like to do in this room?
+  1. Relaxing
+  2. Working
+  3. Entertaining
+  4. Reading
+Your choice (number or custom text): 1
+
+[LLM] Q2 (confidence=0.22). Which style of interior design appeals to you most?
+  1. Minimalist
+  2. Modern
+  3. Traditional
+  4. Rustic
+Your choice (number or custom text): 1
+
+[LLM] Q3 (confidence=0.44). How important is spatial efficiency to you when designing the layout?
+  1. Very Important
+  2. Somewhat Important
+  3. Not Very Important
+  4. Not at All Important
+Your choice (number or custom text): 4
+
+[fallback] Q4 (confidence=0.44). Which spatial priority matters most?
+  1. open center
+  2. privacy
+  3. wall-aligned
+  4. work triangle
+Your choice (number or custom text): 1
+
+[LLM] Q5 (confidence=0.66). Which furniture option would you like to place in the center of the room?     
+  1. bed
+  2. desk
+  3. nightstand
+  4. cupboard
+Your choice (number or custom text): 3
+
+[LLM] Q6 (confidence=0.66). Which furniture option would you like to place in the corner of the room?     
+  1. nightstand
+  2. desk
+Your choice (number or custom text): 2
+
+CRS readiness confidence: 0.78 after 6 questions.    
+
+CRS Recommendation:
+- recommended_id: roomgen_000027:2
+- pitch: Open center layout with a nightstand in the center and a desk in one of the corners.
+Current layout:
+- iter: 2
+- query_id: roomgen_000027
+- objects: [['bed', [0.2734375, 0.15625, 1.0, 0.78125]], ['cupboard', [0.8984375, -0.0390625, 1.0, 0.9375]], ['chair', [0.5078125, 0.859375, 0.9765625, 1.0]], ['table', [0.7421875, 0.390625, 1.0, 0.5859375]]]    
+
+Type feedback to continue. Commands: /show, /exit (or plain 'exit')
+
+You: exit
+Session ended.

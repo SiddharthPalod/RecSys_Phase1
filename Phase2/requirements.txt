@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+langchain-core
+langchain-ollama
+requests
