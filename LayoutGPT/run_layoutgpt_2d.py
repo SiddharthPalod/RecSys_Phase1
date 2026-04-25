@@ -22,6 +22,7 @@ llm_name2id = {
     'gpt3.5-chat': 'gpt-3.5-turbo',
     'gpt4': 'gpt-4',
     'ollama': 'llama3.1',
+    'ollama-llama3.1-8b': 'llama3.1:8b',
 }
 
 parser = argparse.ArgumentParser(prog='LayoutGPT: text-based image layout planning', description='Use LayoutGPT to generate image layouts.')
@@ -571,7 +572,8 @@ def _main(args):
     elif 'ollama' in args.llm_type:
         tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
         f_form_prompt = form_prompt_for_chatgpt
-        model = args.ollama_model
+        # "ollama" uses --ollama_model, while fixed ollama-* presets can come from llm_name2id.
+        model = args.ollama_model if args.llm_type == 'ollama' else args.llm_id
         f_llm_generation = ollama_generation
     else:
         raise NotImplementedError

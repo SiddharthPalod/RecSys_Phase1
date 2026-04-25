@@ -1,0 +1,175 @@
+LAYOUTS = [
+    {
+        "id": "layout_01",
+        "bed":      [0.02, 0.02, 0.40, 0.45],
+        "cupboard": [0.02, 0.50, 0.18, 0.85],
+        "table":    [0.45, 0.55, 0.70, 0.80],
+        "chair":    [0.45, 0.05, 0.58, 0.22],
+        "sofa":     [0.42, 0.83, 0.78, 0.98],
+        "description": (
+            "The bed occupies the top-left corner, spanning a large portion of the left wall. "
+            "The cupboard sits directly below it on the same left wall, keeping sleeping and "
+            "storage tightly together on one side. A chair is tucked into the top-right area "
+            "as a compact reading spot. A table sits center-right with a sofa running along "
+            "the bottom edge beneath it. The right half and bottom of the room hold the active "
+            "zones while the left side is dominated by sleeping and storage. Density is low-to-"
+            "moderate with a clear left-wall anchor and open center-right movement space."
+        ),
+    },
+    {
+        "id": "layout_02",
+        "bed":      [0.30, 0.35, 0.70, 0.75],
+        "cupboard": [0.82, 0.05, 0.98, 0.55],
+        "table":    [0.05, 0.70, 0.25, 0.95],
+        "chair":    [0.78, 0.65, 0.92, 0.90],
+        "sofa":     [0.28, 0.02, 0.72, 0.20],
+        "description": (
+            "The bed is positioned dead center in the room, acting as the focal point with "
+            "clearance on all sides. A sofa lines the top wall above the bed, creating a "
+            "relaxed zone at the room's entrance. The cupboard stands against the right wall "
+            "for storage, and a chair occupies the bottom-right corner. A table anchors the "
+            "bottom-left corner. Furniture is distributed to all four walls around the central "
+            "bed, creating a balanced perimeter arrangement. The style feels airy and "
+            "symmetrical with the sleeping area as the undisputed room center."
+        ),
+    },
+    {
+        "id": "layout_03",
+        "bed":      [0.55, 0.05, 0.98, 0.50],
+        "cupboard": [0.60, 0.55, 0.78, 0.95],
+        "table":    [0.80, 0.55, 0.98, 0.80],
+        "chair":    [0.55, 0.55, 0.62, 0.75],
+        "sofa":     [0.02, 0.60, 0.45, 0.95],
+        "description": (
+            "The bed dominates the right wall from top to mid-room. The cupboard, table, and "
+            "chair are clustered in the bottom-right, forming a dense right-side activity zone. "
+            "A large sofa occupies the bottom-left corner, facing inward across the open left "
+            "half. The entire left half above the sofa is completely free of furniture, creating "
+            "a generous open movement zone. The layout is strongly asymmetric — all functional "
+            "items packed on the right, open breathing space on the left. Density is high "
+            "right, sparse left. The style is zone-concentrated and directional."
+        ),
+    },
+    {
+        "id": "layout_04",
+        "bed":      [0.05, 0.60, 0.55, 0.98],
+        "cupboard": [0.60, 0.60, 0.78, 0.98],
+        "table":    [0.60, 0.05, 0.90, 0.30],
+        "chair":    [0.62, 0.32, 0.75, 0.48],
+        "sofa":     [0.02, 0.05, 0.45, 0.22],
+        "description": (
+            "The bed spans the entire bottom-left, anchored to the bottom and left walls. "
+            "A sofa sits in the top-left corner above the bed, defining a relaxation zone "
+            "separated from sleeping. The table occupies the top-right as a dedicated workspace, "
+            "with a chair positioned just below it. The cupboard stands in the bottom-right "
+            "corner for storage beside the bed. The layout achieves strong diagonal zone "
+            "separation — sleeping and lounging bottom-left and top-left, working top-right, "
+            "storage bottom-right — with open space in the center. Highly purposeful and "
+            "organized with each item in its own clearly bounded quadrant."
+        ),
+    },
+    {
+        "id": "layout_05",
+        "bed":      [0.03, 0.03, 0.35, 0.38],
+        "cupboard": [0.03, 0.62, 0.15, 0.97],
+        "table":    [0.60, 0.05, 0.85, 0.28],
+        "chair":    [0.88, 0.05, 0.98, 0.28],
+        "sofa":     [0.40, 0.70, 0.80, 0.95],
+        "description": (
+            "The bed and cupboard both hug the left wall — bed top-left, cupboard bottom-left — "
+            "keeping the sleeping and storage zones stacked vertically on one side. The table "
+            "and chair are paired against the top-right wall forming a compact workspace. A sofa "
+            "sits in the bottom-right area, creating a seating zone in the far corner. The center "
+            "of the room is completely open. All items are wall-hugging with a large open center, "
+            "giving a studio-like feel with perimeter activity and maximum floor visibility. "
+            "Density is low overall with a clear left-sleep, right-work, bottom-right-lounge pattern."
+        ),
+    },
+    {
+        "id": "layout_06",
+        "bed":      [0.30, 0.05, 0.70, 0.42],
+        "cupboard": [0.02, 0.10, 0.22, 0.55],
+        "table":    [0.35, 0.60, 0.65, 0.85],
+        "chair":    [0.42, 0.87, 0.58, 0.98],
+        "sofa":     [0.78, 0.10, 0.98, 0.55],
+        "description": (
+            "The bed is centered in the top half of the room, flanked by a cupboard on the "
+            "left wall and a sofa on the right wall — creating a symmetrical sleeping zone with "
+            "storage and seating on either side. A table sits centered in the lower half directly "
+            "below the bed, with a chair at its base. The layout has a strong vertical axis of "
+            "symmetry with the bed and table stacked centrally. Sleeping zone top-center, "
+            "dining zone bottom-center, storage left, seating right. The style feels composed, "
+            "formal, and architecturally balanced with moderate density."
+        ),
+    },
+    {
+        "id": "layout_07",
+        "bed":      [0.02, 0.02, 0.55, 0.42],
+        "cupboard": [0.58, 0.02, 0.75, 0.42],
+        "table":    [0.58, 0.48, 0.80, 0.72],
+        "chair":    [0.82, 0.48, 0.98, 0.72],
+        "sofa":     [0.05, 0.70, 0.45, 0.98],
+        "description": (
+            "The bed occupies the wide top-left area spanning over half the room width. A "
+            "cupboard sits top-right adjacent to the bed, keeping storage within the sleeping "
+            "zone. A table and chair are paired in the mid-right, forming a distinct workspace. "
+            "A large sofa anchors the bottom-left as a dedicated living zone. The layout has "
+            "four clearly delineated zones — sleeping top-left, storage top-right, workspace "
+            "mid-right, seating bottom-left — with moderate-to-high density. The style is "
+            "highly functional with strong zone separation and a multi-purpose feel."
+        ),
+    },
+    {
+        "id": "layout_08",
+        "bed":      [0.02, 0.02, 0.38, 0.40],
+        "cupboard": [0.68, 0.65, 0.85, 0.98],
+        "table":    [0.35, 0.30, 0.60, 0.58],
+        "chair":    [0.55, 0.55, 0.70, 0.75],
+        "sofa":     [0.02, 0.68, 0.35, 0.98],
+        "description": (
+            "Furniture follows a clear diagonal flow from top-left to bottom-right. The bed "
+            "anchors the top-left corner, a table sits center bridging sleep and work, and a "
+            "chair is placed center-right beside the table. The cupboard anchors the bottom-"
+            "right corner completing the diagonal. A sofa sits in the bottom-left, mirroring "
+            "the cupboard across the diagonal and creating a seating anchor. Triangular open "
+            "zones appear in the top-right and the center. Density is low-to-moderate with a "
+            "dynamic flowing spatial feel. The style is modern and asymmetric with strong "
+            "directional movement through the room."
+        ),
+    },
+    {
+        "id": "layout_09",
+        "bed":      [0.00, 0.02, 0.30, 0.45],
+        "cupboard": [0.00, 0.55, 0.18, 0.90],
+        "table":    [0.82, 0.02, 0.98, 0.35],
+        "chair":    [0.82, 0.40, 0.98, 0.60],
+        "sofa":     [0.30, 0.82, 0.75, 0.98],
+        "description": (
+            "All furniture is pushed to the perimeter walls, leaving the entire center "
+            "completely open. The bed and cupboard occupy the left wall — sleeping top-left, "
+            "storage bottom-left. The table and chair are aligned against the right wall — "
+            "workspace top-right and mid-right. The sofa runs along the bottom wall between "
+            "the two sides. The massive open center creates a studio-like movement space. "
+            "Zones are separated strictly by wall: left for sleep and storage, right for work, "
+            "bottom for seating. Density is low with high perimeter concentration. "
+            "The style is maximally open and studio-functional."
+        ),
+    },
+    {
+        "id": "layout_10",
+        "bed":      [0.02, 0.02, 0.48, 0.48],
+        "cupboard": [0.52, 0.02, 0.70, 0.48],
+        "table":    [0.72, 0.02, 0.98, 0.35],
+        "chair":    [0.72, 0.38, 0.88, 0.58],
+        "sofa":     [0.02, 0.55, 0.45, 0.80],
+        "description": (
+            "All five items pack the room with high density. The bed fills the top-left "
+            "quadrant with the cupboard immediately beside it and the table in the far top-"
+            "right corner. A chair sits mid-right adjacent to the table. A large sofa fills "
+            "the bottom-left. All zones are tightly arranged with minimal gaps — sleeping "
+            "top-left, storage top-center, workspace top-right, seating bottom-left. "
+            "Density is very high throughout with every wall section occupied. The style is "
+            "cozy, maximally furnished, and apartment-efficient with no wasted space."
+        ),
+    },
+]
