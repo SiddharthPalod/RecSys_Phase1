@@ -12,6 +12,10 @@ import re
 from transformers import GPT2TokenizerFast, LlamaForCausalLM, LlamaTokenizer
 import transformers
 from utils import *
+try:
+    import clip
+except ImportError:
+    clip = None
 
 # GPT-3 Type
 llm_name2id = {
@@ -105,6 +109,11 @@ args = parser.parse_args()
 
 
 if args.icl_type == 'k-similar':
+    if clip is None:
+        raise ImportError(
+            "CLIP is required for --icl_type k-similar. Install it with: "
+            "pip install git+https://github.com/openai/CLIP.git"
+        )
     # Load CLIP model
     clip_feature_name = 'ViT-L/14'.lower().replace('/', '-')
     device = "cuda" if torch.cuda.is_available() else "cpu"
