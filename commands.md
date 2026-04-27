@@ -1,10 +1,10 @@
 <!-- Phase 1 Terminal Generation Command -->
-python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json"
+python Phase1/layout_terminal_interface.py --dataset "Phase1/detailed_fixed_strict.json"
 
-python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --show_results --filtered_items_out "Phase1/filter.json"
+python Phase1/layout_terminal_interface.py --dataset "Phase1/detailed_fixed_strict.json" --show_results --filtered_items_out "Phase1/filter.json"
 
 Without Launching LayoutGPT
-python Phase1/layout_terminal_interface.py --dataset "Phase1/room_dataset_cleaned.json" --dry_run
+python Phase1/layout_terminal_interface.py --dataset "Phase1/detailed_fixed_strict.json" --dry_run
 
 Status of BG Jobs
 python "Phase1/layout_terminal_interface.py" --job_status

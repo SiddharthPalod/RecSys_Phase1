@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Any
 
 
+DETAIL_MARKER = "All boxes must be non-overlapping"
+
+
 DEFAULT_FURNITURE = [
     "bed",
     "chair",
@@ -39,8 +42,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument(
         "--dataset",
         type=Path,
-        default=Path("Phase1/room_dataset_cleaned.json"),
-        help="Path to cleaned dataset JSON list. Will be created if missing.",
+        default=Path("LayoutGPT/llm_output/counting/detailed_fixed_strict.json"),
+        help="Path to dataset JSON list used for filtering and prompt style transfer.",
     )
     ap.add_argument(
         "--layoutgpt_dir",
@@ -211,25 +214,96 @@ def build_prompt(room_w: int, room_h: int, furniture: list[str]) -> str:
     )
 
 
+def room_size_from_row(row: dict[str, Any]) -> tuple[int | None, int | None]:
+    room_size = row.get("room_size")
+    if (
+        isinstance(room_size, list)
+        and len(room_size) >= 2
+        and isinstance(room_size[0], (int, float))
+        and isinstance(room_size[1], (int, float))
+    ):
+        return int(room_size[0]), int(room_size[1])
+    return None, None
+
+
+def furniture_display_list(furniture: list[str]) -> str:
+    return ", ".join(item.replace("-", " ").title() for item in furniture)
+
+
+def score_prompt_reference_row(row: dict[str, Any], required_items: list[str]) -> tuple[int, int, int]:
+    labels = object_labels_from_row(row)
+    required = {normalize_label(item) for item in required_items}
+    overlap = len(labels.intersection(required))
+    exact = 1 if labels == required else 0
+    same_count = 1 if len(labels) == len(required) else 0
+    prompt_len = len(str(row.get("prompt", "")))
+    return exact, same_count + overlap, prompt_len
+
+
+def pick_reference_prompt(dataset: list[dict[str, Any]], required_items: list[str]) -> str | None:
+    candidates: list[tuple[tuple[int, int, int], str]] = []
+    for row in dataset:
+        prompt = str(row.get("prompt", "")).strip()
+        if not prompt:
+            continue
+        labels = object_labels_from_row(row)
+        required = {normalize_label(item) for item in required_items}
+        if labels and labels.intersection(required):
+            candidates.append((score_prompt_reference_row(row, required_items), prompt))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1]
+
+
+def build_detailed_prompt(
+    room_w: int,
+    room_h: int,
+    furniture: list[str],
+    reference_prompt: str | None,
+) -> str:
+    intro = (
+        f"Create one top-down room layout for a rectangular room of size {room_w}x{room_h} "
+        f"(width x height) using exactly {len(furniture)} furniture item"
+        f"{'' if len(furniture) == 1 else 's'}: {furniture_display_list(furniture)}."
+    )
+    if reference_prompt and DETAIL_MARKER in reference_prompt:
+        suffix = reference_prompt.split(DETAIL_MARKER, 1)[1].strip()
+        return (
+            f"{intro} {DETAIL_MARKER} {suffix} "
+            f"Respect the exact room dimensions {room_w}x{room_h}; do not assume 256x256."
+        )
+    return (
+        f"{intro} "
+        "All boxes must be non-overlapping, fully inside the room, and axis-aligned. "
+        "A continuous path should remain readable across the room with center clearance. "
+        "Return one final layout only. Output only CSS boxes, one per line, using exactly these labels. "
+        f"Respect the exact room dimensions {room_w}x{room_h}; do not assume 256x256."
+    )
+
+
 def filter_dataset(
     dataset: list[dict[str, Any]],
     room_w: int,
     room_h: int,
     required_items: list[str],
 ) -> list[dict[str, Any]]:
-    out = []
-    room_dim_token = f"{room_w}x{room_h}"
+    exact_dim: list[dict[str, Any]] = []
+    dimension_unknown: list[dict[str, Any]] = []
+    other_dim: list[dict[str, Any]] = []
     for row in dataset:
         labels = object_labels_from_row(row)
         if not matches_required_items(labels, required_items):
             continue
-        prompt = str(row.get("prompt", ""))
-        # Prefer exact room-size match when encoded in prompt; allow fallback otherwise.
-        if room_dim_token in prompt:
-            out.insert(0, row)
+        row_w, row_h = room_size_from_row(row)
+        if row_w is None or row_h is None:
+            dimension_unknown.append(row)
+        elif row_w == room_w and row_h == room_h:
+            exact_dim.append(row)
         else:
-            out.append(row)
-    return out
+            other_dim.append(row)
+    # Keep exact-dimension results first; unknown next; mismatched dimensions last.
+    return exact_dim + dimension_unknown + other_dim
 
 
 def pending_jobs_path(phase1_dir: Path) -> Path:
@@ -430,6 +504,8 @@ def launch_background_generation(
         "--output_file",
         str(output_json),
         "--incremental",
+        "--canvas_size",
+        str(max(room_w, room_h)),
     ]
 
     print("\nFiltered count is low. Launching background generation job...")
@@ -553,7 +629,12 @@ def main() -> None:
         print("Detailed row listing is hidden. Use --show_results for debugging.")
 
     if len(filtered) < args.min_results:
-        prompt = build_prompt(room_w, room_h, furniture)
+        reference_prompt = pick_reference_prompt(dataset, furniture)
+        prompt = build_detailed_prompt(room_w, room_h, furniture, reference_prompt)
+        if reference_prompt:
+            print("Using detailed dataset-style prompt template for generation.")
+        else:
+            print("No detailed template found for selected furniture. Using fallback detailed prompt.")
         launch_background_generation(
             layoutgpt_dir=layoutgpt_dir,
             phase1_dir=phase1_dir,
